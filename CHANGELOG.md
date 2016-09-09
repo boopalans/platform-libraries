@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] 2016-09-09
+### Changed
+- Project renamed to PNDA
+### Added
+- Jenkinsfile for CI
+
 ## [0.1.0] 2016-07-01
 ### First version
 

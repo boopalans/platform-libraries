@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+### Changed
+- Externalized build logic from Jenkins to shell script so it can be reused
+
 ## [0.1.1] 2016-09-09
 ### Changed
 - Project renamed to PNDA

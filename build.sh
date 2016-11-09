@@ -10,12 +10,27 @@ function error {
     exit -1
 }
 
+function code_quality_error {
+    echo "${1}"
+}
+
 echo -n "SPARK_HOME: "
 if [[ $($SPARK_HOME/bin/spark-submit --version 2>&1) != *"version 1.5.0"* ]]; then
     error
 else
     echo "OK"
 fi
+
+echo -n "Code quality: "
+PYLINTOUT=$(find . -type f -name '*.py' | grep -vi __init__ | xargs pylint)
+SCORE=$(echo ${PYLINTOUT} | grep -Po '(?<=rated at ).*?(?=/10)')
+echo ${SCORE}
+if [[ $(bc <<< "${SCORE} > 9") == 0 ]]; then
+    code_quality_error "${PYLINTOUT}"
+fi
+
+nosetests tests
+[[ $? -ne 0 ]] && exit -1
 
 mkdir -p pnda-build
 SPARK_VERSION='1.5.0'

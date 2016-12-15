@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] 2016-12-12
+### Changed
+- Externalized build logic from Jenkins to shell script so it can be reused
+- PNDA-2441: Up Spark version to 1.6
+
 ## [0.1.1] 2016-09-09
 ### Changed
 - Project renamed to PNDA

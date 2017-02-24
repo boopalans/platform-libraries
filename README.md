@@ -67,6 +67,7 @@ If your PNDA cluster does not have this library pre-installed, or you would like
 Once you clone the repsitory, run a build process as follows:
 
 ```
+  sudo pip install -r requirements.txt
 	python setup.py bdist_egg
 ```
 
@@ -77,7 +78,7 @@ The build process generates an 'eggy' distribution at `./dist/platformlibs-<VERS
 Running unittests on either PNDA cluster or your local cluster requires these dependencies. Run the followings to install:
 
 ```
-	sudo pip -r requirements.txt
+	sudo pip -r test_requirements.txt
 	source install-spark.sh
 ```
 

@@ -50,7 +50,7 @@ As the diagram below, the platform libraries place an abstract layer upon low-le
 By default for every successfully provisioned PNDA cluster, the library is pre-installed on a 'edge node'. Follow the steps to start loading data:
 
 ```
-$ sudo -u hdfs pyspark --jars /path/to/spark-examples.jar --py-files /path/to/platformlibs-<Version>-py2.7.egg 
+$ sudo -u hdfs pyspark --master yarn-client --jars /opt/cloudera/parcels/CDH/lib/spark/lib/spark-examples.jar 
 >>> from platformlibs.simple_data_handler import SimpleDataHandler
 >>> source = 'your data source name' # is the folder name under /user/pnda/PNDA_datasets/datasets/source=?
 >>> path = 'year=?/month=?/hour=?' # any sub-directory under /user/pnda/PNDA_datasets/datasets/source=?

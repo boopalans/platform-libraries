@@ -63,7 +63,7 @@ class DataHandler(object):
         if self._hdfs_root_uri:
             return self._hdfs_root_uri
         cm_conf = read_config('/etc/platformlibs/platformlibs.ini')
-        self._hdfs_root_uri = get_hdfs_uri(cm_conf['cm_host'], cm_conf['cm_user'], cm_conf['cm_pass'])
+        self._hdfs_root_uri = get_hdfs_uri(cm_conf['cm_host'], cm_conf['cm_user'], cm_conf['cm_pass'], cm_conf['hadoop_distro'])
         return self._hdfs_root_uri
 
     @property

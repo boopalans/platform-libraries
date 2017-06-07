@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - PNDA-2577: review python deps versions
 
+### Added
+- PNDA-2445: Support for Hortonworks HDP hadoop distro.
+
 ## [0.1.2] 2016-12-12
 ### Changed
 - Externalized build logic from Jenkins to shell script so it can be reused

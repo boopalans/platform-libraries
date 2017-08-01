@@ -198,7 +198,7 @@ A collection of builtin helper functions
     * **Args:**
       * raw_data: the input RDD
     ```
-    >>> from platformlibs.simple_data_handler import JsonDataHandler
+    >>> from platformlibs.simple_data_handler import SimpleDataHandler
     >>> handler = SimpleDataHandler(sc, 'test', 'year=2015/month=11/day=02/hour=11')
     >>> rdd = handler.rdd
     >>> rdd.count()

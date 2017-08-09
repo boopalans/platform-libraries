@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 - PNDA-2577: review python deps versions
 - PNDA-2807: Update README.md in order to use yarn-client mode
 
+### Added
+- PNDA-2445: Support for Hortonworks HDP hadoop distro.
+
 ## [0.1.2] 2016-12-12
 ### Changed
 - Externalized build logic from Jenkins to shell script so it can be reused

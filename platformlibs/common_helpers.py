@@ -71,14 +71,33 @@ def connect_cm(cm_api, cm_username, cm_password):
         password=cm_password)
     return api
 
+def ambari_request(ambari, uri):
+    hadoop_manager_ip = ambari[0]
+    hadoop_manager_username = ambari[1]
+    hadoop_manager_password = ambari[2]
+    if uri.startswith("http"):
+        full_uri = uri
+    else:
+        full_uri = 'http://%s:8080/api/v1%s' % (hadoop_manager_ip, uri)
+
+    headers = {'X-Requested-By': hadoop_manager_username}
+    auth = (hadoop_manager_username, hadoop_manager_password)
+    return requests.get(full_uri, auth=auth, headers=headers).json()
+
+def get_hdfs_hdp(ambari, cluster_name):
+    core_site = ambari_request(ambari, '/clusters/%s?fields=Clusters/desired_configs/core-site' % cluster_name)
+    config_version = core_site['Clusters']['desired_configs']['core-site']['tag']
+    core_site_config = ambari_request(ambari, '/clusters/%s/configurations/?type=core-site&tag=%s' % (cluster_name, config_version))
+    return core_site_config['items'][0]['properties']['fs.defaultFS']
+
 def get_name_service(cm_host, cluster_name, service_name, user_name='admin', password='admin'):
     '''
     get name service
     Args:
-        - cm_host: cloudera manager host name
+        - cm_host: hadoop manager host name
         - service_name: service name
-        - cm_username: cloudera manager login user
-        - cm_password: cloudera manager login password
+        - cm_username: hadoop manager login user
+        - cm_password: hadoop manager login password
     '''
     request_url = 'http://%s:7180/api/v11/clusters/%s/services/%s/nameservices' % (cm_host, cluster_name, service_name)
     result = requests.get(request_url, auth=(user_name, password))
@@ -89,29 +108,36 @@ def get_name_service(cm_host, cluster_name, service_name, user_name='admin', pas
             name_service = response['items'][0]['name']
     return name_service
 
-def get_hdfs_uri(cm_host, cm_user, cm_pass):
+def get_hdfs_uri(cm_host, cm_user, cm_pass, hadoop_distro):
     '''
     return hdfs root uri
     args:
-        - cm_host: cloudera manager host name
-        - cm_username: cloudera manager login user
-        - cm_password: cloudera manager login password
+        - cm_host: hadoop manager host name
+        - cm_username: hadoop manager login user
+        - cm_password: hadoop manager login password
+        - hadoop_distro: 'CDH' or 'HDP'
     '''
     hdfs_uri = ''
-    api = connect_cm(cm_host, cm_user, cm_pass)
 
-    for cluster_detail in api.get_all_clusters():
-        cluster_name = cluster_detail.name
-        break
+    if hadoop_distro == 'CDH':
+        api = connect_cm(cm_host, cm_user, cm_pass)
 
-    cluster = api.get_cluster(cluster_name)
-    for service in cluster.get_all_services():
-        if service.type == "HDFS":
-            name_service = get_name_service(cm_host, cluster_name, service.name, cm_user, cm_pass)
-            if name_service:
-                hdfs_uri = 'hdfs://%s' % name_service
-            for role in service.get_all_roles():
-                if not name_service and role.type == "NAMENODE":
-                    hdfs_uri = 'hdfs://%s:8020' % api.get_host(role.hostRef.hostId).ipAddress
+        for cluster_detail in api.get_all_clusters():
+            cluster_name = cluster_detail.name
+            break
+
+        cluster = api.get_cluster(cluster_name)
+        for service in cluster.get_all_services():
+            if service.type == "HDFS":
+                name_service = get_name_service(cm_host, cluster_name, service.name, cm_user, cm_pass)
+                if name_service:
+                    hdfs_uri = 'hdfs://%s' % name_service
+                for role in service.get_all_roles():
+                    if not name_service and role.type == "NAMENODE":
+                        hdfs_uri = 'hdfs://%s:8020' % api.get_host(role.hostRef.hostId).ipAddress
+    else:
+        ambari = (cm_host, cm_user, cm_pass)
+        cluster_name = ambari_request(ambari, '/clusters')['items'][0]['Clusters']['cluster_name']
+        hdfs_uri = get_hdfs_hdp(ambari, cluster_name)
 
     return hdfs_uri

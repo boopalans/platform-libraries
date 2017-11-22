@@ -1,13 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+### Added
+- PNDA-2445: Support for Hortonworks HDP hadoop distro.
+## Fixed
+- PNDA-3499: Cleanup CHANGELOG with missing release info.
+
 ## [0.1.3] 2017-05-23
 ### Changed
 - PNDA-2577: review python deps versions
 - PNDA-2807: Update README.md in order to use yarn-client mode
-
-### Added
-- PNDA-2445: Support for Hortonworks HDP hadoop distro.
 
 ## [0.1.2] 2016-12-12
 ### Changed

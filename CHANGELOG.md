@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## [0.1.4] 2017-11-24
+### Added
+- PNDA-2445: Support for Hortonworks HDP hadoop distro.
+## Fixed
+- PNDA-3499: Cleanup CHANGELOG with missing release info.
+
 ## [0.1.3] 2017-05-23
 ### Changed
 - PNDA-2577: review python deps versions

@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - PNDA-2577: review python deps versions
 - PNDA-2807: Update README.md in order to use yarn-client mode
+- PNDA-3237: remove default RDD caching
 
 ## [0.1.2] 2016-12-12
 ### Changed

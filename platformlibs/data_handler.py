@@ -97,7 +97,6 @@ class DataHandler(object):
                       conf=conf)
         preprocess = self.preprocess
         self._rdd = data_rdd.map(lambda x: preprocess(x[0]))
-        self._rdd.cache()
         return self._rdd
 
     def _load_schema(self):

@@ -3,7 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ### Changed
-- PNDA-3601: disable emailtext in Jenkins file and replace it with notifier stage and job
+- PNDA-3601: Disable emailtext in Jenkins file and replace it with notifier stage and job
+- PNDA-3237: Don't rdd.cache() as this has implications and should be left up to the client
 
 ## [0.1.4] 2017-11-24
 ### Added

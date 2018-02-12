@@ -2,7 +2,7 @@
 #
 # Please check pnda-build/ for the build products
 
-export VERSION=${1//-/_}
+export VERSION=${1}
 
 function error {
     echo "Not Found"
@@ -38,5 +38,10 @@ nosetests tests
 
 mkdir -p pnda-build
 python setup.py bdist_egg
-mv dist/platformlibs-${VERSION}-py2.7.egg pnda-build/
-sha512sum pnda-build/platformlibs-${VERSION}-py2.7.egg > pnda-build/platformlibs-${VERSION}-py2.7.egg.sha512.txt
+eggs=($(ls dist/platformlibs*py2.7.egg | xargs -n 1 basename))
+if [[ ${#eggs[@]} -ne 1 ]]; then
+    echo "Expected 1 file matching platformlibs*py2.7.egg in dist/ but found ${#eggs[@]} - not continuing"
+    exit -1
+fi
+mv dist/${eggs[0]} pnda-build/${eggs[0]}
+sha512sum pnda-build/${eggs[0]} > pnda-build/${eggs[0]}.sha512.txt

@@ -43,7 +43,7 @@ class JsonDataHandlerTestCase(SparkTestCase):
         type(handler).rdd = mock_rdd
 
         #test list metrics without limits and filters
-        expected_result = [('in_bytes', 3), ('in_pkts', 3), ('version', 3)]
+        expected_result = [('in_bytes', 3), ('version', 3), ('in_pkts', 3)]
         result = handler.list_metric_ids()
         logging.debug(result)
         self.assertEqual(result, expected_result)
@@ -67,8 +67,8 @@ class JsonDataHandlerTestCase(SparkTestCase):
 
         #test query without filters
         expected_result = [('in_bytes', [(1446426784000, '240'), (1446426785000, '220'), (1446436817000, '181')]), 
-                           ('in_pkts', [(1446426784000, '4'), (1446426785000, '6'), (1446436817000, '4')]), 
-                           ('version', [(1446426784000, '5'), (1446426785000, '5'), (1446436817000, '5')])]
+                           ('version', [(1446426784000, '5'), (1446426785000, '5'), (1446436817000, '5')]),
+                           ('in_pkts', [(1446426784000, '4'), (1446426785000, '6'), (1446436817000, '4')])]
         result = handler.execute_query()
         logging.debug(result)
         self.assertEqual(result, expected_result)
@@ -78,9 +78,9 @@ class JsonDataHandlerTestCase(SparkTestCase):
         # test query with additional timestamp filters
         filters['start_ts'] = 1446426784000
         filters['end_ts'] = 1446426784400
-        expected_result = [('in_bytes', [(1446426784000, '240')]), 
-                           ('in_pkts', [(1446426784000, '4')]), 
-                           ('version', [(1446426784000, '5')])]
+        expected_result = [('in_bytes', [(1446426784000, '240')]),  
+                           ('version', [(1446426784000, '5')]),
+                           ('in_pkts', [(1446426784000, '4')])]
         result = handler.execute_query(filters=filters)
         logging.debug(result)
         self.assertEqual(result, expected_result)

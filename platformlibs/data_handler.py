@@ -53,11 +53,6 @@ class DataHandler(object):
         return raw_data
 
     @abstractmethod
-    def list_host_ips(self):
-        """ return list of monitored host ips """
-        pass
-
-    @abstractmethod
     def list_metric_ids(self, limit=-1):
         """ return list of metrics """
         pass

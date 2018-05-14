@@ -35,7 +35,7 @@ class DataHandler(object):
         """ Constructor """
         self.spark_context = spark_context
         self.datasource = datasource
-        self.topic = topic
+        self.isTopic = isTopic
         self.path = path
         self._rdd = None
         self._hdfs_root_uri = None

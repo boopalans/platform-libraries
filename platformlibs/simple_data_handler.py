@@ -23,11 +23,13 @@ class SimpleDataHandler(DataHandler):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         '''
         Constructor
         :param sc:
         :param datasource:
+        :param topic:
         :param path:
         :param cluster_name:
         :param manager_hostname:
@@ -35,7 +37,8 @@ class SimpleDataHandler(DataHandler):
         DataHandler.__init__(self,
                              spark_context,
                              datasource,
-                             path)
+                             path,
+                             isTopic)
 
     def list_host_ips(self):
         """ not supported """

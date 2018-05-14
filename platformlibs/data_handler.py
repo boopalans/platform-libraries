@@ -14,6 +14,8 @@ Name:       data_handler
 Purpose:    Abstract DataHandler class
 """
 
+import avro.schema
+import json
 from abc import ABCMeta
 from abc import abstractmethod
 from platformlibs.config_helper import read_config
@@ -28,10 +30,12 @@ class DataHandler(object):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         """ Constructor """
         self.spark_context = spark_context
         self.datasource = datasource
+        self.topic = topic
         self.path = path
         self._rdd = None
         self._hdfs_root_uri = None
@@ -73,22 +77,22 @@ class DataHandler(object):
             - datasource: data source name
             - path: the relative path to data source directory
         """
-
         if self._rdd:
             return self._rdd
-
-        root = '{}/user/pnda/PNDA_datasets/' \
-               'datasets/source={}/{}' \
-               .format(self.hdfs_root_uri,
-                       self.datasource,
-                       self.path)
+        
+        root = ('{}/user/pnda/PNDA_datasets/datasets/topic={}/{}' \
+            if self.isTopic else \
+            '{}/user/pnda/PNDA_datasets/datasets/source={}/{}') \
+            .format(self.hdfs_root_uri,
+                   self.datasource,
+                   self.path)
         conf = {
             "avro.schema.input.key": reduce(lambda x, y: x + y, self.schema),
             "mapreduce.input.fileinputformat.input.dir.recursive": "true"
         }
         data_rdd = self.spark_context \
                   .newAPIHadoopFile(
-                      root,
+                      path,
                       "org.apache.avro.mapreduce.AvroKeyInputFormat",
                       "org.apache.avro.mapred.AvroKey",
                       "org.apache.hadoop.io.NullWritable",
@@ -104,6 +108,12 @@ class DataHandler(object):
         Args:
             - hdfs_root_uri: hdfs root uri
         """
-        schema_path = '{}/user/pnda/PNDA_datasets/datasets/' \
-                      '.metadata/schema.avsc'.format(self.hdfs_root_uri)
-        return self.spark_context.textFile(schema_path).collect()
+        schema_dic = {"namespace": "pnda.entity",
+               "type": "record",
+               "name": "event",
+               "fields": [
+                   {"name": "timestamp", "type": "long"},
+                   {"name": "source",    "type": "string"},
+                   {"name": "rawdata",   "type": "bytes"}
+                ]}
+        return avro.schema.parse(json.dumps(schema_dic))

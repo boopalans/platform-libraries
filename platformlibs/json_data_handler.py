@@ -23,7 +23,8 @@ class JsonDataHandler(DataHandler):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         '''
         Constructor
         :param sc:
@@ -35,7 +36,8 @@ class JsonDataHandler(DataHandler):
         DataHandler.__init__(self,
                              spark_context,
                              datasource,
-                             path)
+                             path,
+                             isTopic)
 
     @staticmethod
     def preprocess(data_dict):

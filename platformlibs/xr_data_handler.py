@@ -25,7 +25,8 @@ class XrDataHandler(JsonDataHandler):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         '''
         Constructor
         :param sc:
@@ -35,7 +36,8 @@ class XrDataHandler(JsonDataHandler):
         JsonDataHandler.__init__(self,
                                  spark_context,
                                  datasource,
-                                 path)
+                                 path,
+                                 isTopic)
 
     @staticmethod
     def preprocess(data_dict):

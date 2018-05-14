@@ -59,7 +59,7 @@ class JsonDataHandler(DataHandler):
 
         t_rdd = self.rdd
 
-        stats = t_rdd.flatMap(lambda x: json_normalize(x['rawdata']).to_dict().keys()) \
+        stats = t_rdd.flatMap(lambda x: x['rawdata'].keys()) \
                     .map(lambda x: (x, 1)) \
                     .reduceByKey(lambda x, y: x + y) \
                     .collect()

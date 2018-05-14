@@ -25,7 +25,8 @@ class XrDataHandler(JsonDataHandler):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         '''
         Constructor
         :param sc:
@@ -35,7 +36,8 @@ class XrDataHandler(JsonDataHandler):
         JsonDataHandler.__init__(self,
                                  spark_context,
                                  datasource,
-                                 path)
+                                 path,
+                                 isTopic)
 
     @staticmethod
     def preprocess(data_dict):
@@ -47,55 +49,47 @@ class XrDataHandler(JsonDataHandler):
         raw_data_str = re.sub(r'"{"', '{"', raw_data_str)
         raw_data_str = re.sub(r'}"}', '}}', raw_data_str)
         raw_data_dict = json.loads(raw_data_str)
-        if 'path' in raw_data_dict.keys():
-            data_dict['path'] = raw_data_dict['path']
-
-        if 'identifier' in raw_data_dict.keys():
-            data_dict['identifier'] = raw_data_dict['identifier']
-
-        if 'type' in raw_data_dict.keys():
-            data_dict['type'] = raw_data_dict['type']
-
-        data_dict['rawdata'] = flatten_dict(raw_data_dict['content'])
+        data_dict['rawdata'] = flatten_dict(raw_data_dict)
         return data_dict
 
     def list_metric_ids(self, limit=-1, filters=None):
         """ return list of metric statistics """
         #embedded function declaration
-        def func(item):
-            return item
-
         def get_count(item):
             return item[1]
 
         t_rdd = self.rdd
+        m_filter = None
+        m_type_filter = None
 
         if filters:
-            if filters.has_key('host_ips'):
-                # filter by host ips
-                t_rdd = t_rdd.filter(lambda x: (x['host_ip'] in filters['host_ips']))
+            # extract metric list filter if exists
+            m_filter = filters.pop('metrics', None)
+            m_type_filter = filters.pop('metric_type', None)
+            for key in filters:
+                t_rdd = t_rdd.filter(lambda x: x['rawdata'][key] in filters[key])
+            t_rdd = t_rdd.map(lambda x: {i:x['rawdata'][i] for i in x['rawdata'] if i not in filters})
+        else:
+            t_rdd = t_rdd.map(lambda x: x['rawdata'])
 
-        t_rdd = t_rdd.map(lambda x: (str(x['host_ip']), x['rawdata'].keys())) \
-             .flatMapValues(func)
+        t_rdd = t_rdd.flatMap(lambda x: x.keys()) \
+                    .map(lambda x: (x, 1)) \
+                    .reduceByKey(lambda x, y: x + y)
 
-        if filters and filters.has_key('metric_type'):
-            metric_type = filters['metric_type']
-            if metric_type is 'ipsla':
-                t_rdd = t_rdd.filter(lambda x: ('ipsla' in x[1]))
-            if metric_type is 'mpls':
-                t_rdd = t_rdd.filter(lambda x: ('mpls' in x[1]))
-            if metric_type is 'infra':
+        if m_filter:
+            t_rdd = t_rdd.filter(lambda x: x[0] in m_filter)
+
+        if m_type_filter:
+            if m_type_filter is 'ipsla':
+                t_rdd = t_rdd.filter(lambda x: ('ipsla' in x))
+            if m_type_filter is 'mpls':
+                t_rdd = t_rdd.filter(lambda x: ('mpls' in x))
+            if m_type_filter is 'infra':
                 t_rdd = t_rdd.filter(lambda x: ('ipsla' not in x)) \
                              .filter(lambda x: ('mpls' not in x))
 
-        t_rdd = t_rdd.map(lambda x: (x, 1)) \
-                     .reduceByKey(lambda x, y: x + y) \
-                     .map(lambda x: (x[0][0], (x[0][1], x[1]))) \
-                     .groupByKey() \
-                     .mapValues(list) \
-                     .map(lambda x: (x[0], sorted(x[1], key=get_count)))
-
+        stats = t_rdd.collect()
+        stats = sorted(stats, key=get_count)
         if limit > 0:
-            t_rdd = t_rdd.map(lambda x: (x[0], x[1][0:limit]))
-
-        return t_rdd.collect()
+            stats = stats[0:limit]
+        return stats

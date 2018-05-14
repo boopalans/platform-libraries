@@ -40,11 +40,7 @@ class SimpleDataHandler(DataHandler):
                              path,
                              isTopic)
 
-    def list_host_ips(self):
-        """ not supported """
-        raise Exception('not implemented - use JsonDataHandler or provide custom implementations')
-
-    def list_metric_ids(self, limit=-1, filters=None):
+    def list_metric_ids(self, limit=-1):
         """ not supported """
         raise Exception('not implemented - use JsonDataHandler or provide custom implementations')
 

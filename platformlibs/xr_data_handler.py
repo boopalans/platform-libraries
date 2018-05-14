@@ -64,21 +64,12 @@ class XrDataHandler(JsonDataHandler):
     def list_metric_ids(self, limit=-1, filters=None):
         """ return list of metric statistics """
         #embedded function declaration
-        def func(item):
-            return item
-
         def get_count(item):
             return item[1]
 
         t_rdd = self.rdd
 
-        if filters:
-            if filters.has_key('host_ips'):
-                # filter by host ips
-                t_rdd = t_rdd.filter(lambda x: (x['host_ip'] in filters['host_ips']))
-
-        t_rdd = t_rdd.map(lambda x: (str(x['host_ip']), x['rawdata'].keys())) \
-             .flatMapValues(func)
+        t_rdd = t_rdd.flatMap(lambda x: x['rawdata'].keys())
 
         if filters and filters.has_key('metric_type'):
             metric_type = filters['metric_type']
@@ -90,14 +81,11 @@ class XrDataHandler(JsonDataHandler):
                 t_rdd = t_rdd.filter(lambda x: ('ipsla' not in x)) \
                              .filter(lambda x: ('mpls' not in x))
 
-        t_rdd = t_rdd.map(lambda x: (x, 1)) \
-                     .reduceByKey(lambda x, y: x + y) \
-                     .map(lambda x: (x[0][0], (x[0][1], x[1]))) \
-                     .groupByKey() \
-                     .mapValues(list) \
-                     .map(lambda x: (x[0], sorted(x[1], key=get_count)))
-
+        stats = t_rdd.map(lambda x: (x, 1)) \
+                    .reduceByKey(lambda x, y: x + y) \
+                    .collect()
+        
+        stats = sorted(stats, key=get_count)
         if limit > 0:
-            t_rdd = t_rdd.map(lambda x: (x[0], x[1][0:limit]))
-
-        return t_rdd.collect()
+            stats = stats[0:limit]
+        return stats

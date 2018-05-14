@@ -14,8 +14,6 @@ Name:       data_handler
 Purpose:    Abstract DataHandler class
 """
 
-import avro.schema
-import json
 from abc import ABCMeta
 from abc import abstractmethod
 from platformlibs.config_helper import read_config
@@ -40,14 +38,14 @@ class DataHandler(object):
         self._rdd = None
         self._hdfs_root_uri = None
         self.schema = '''
-            schema_dic = {"namespace": "pnda.entity",
-               "type": "record",
-               "name": "event",
-               "fields": [
-                   {"name": "timestamp", "type": "long"},
-                   {"name": "source",    "type": "string"},
-                   {"name": "rawdata",   "type": "bytes"}
-                ]}'''
+            {"namespace": "pnda.entity",
+             "type": "record",
+             "name": "event",
+             "fields": [
+                {"name": "timestamp", "type": "long"},
+                {"name": "source",    "type": "string"},
+                {"name": "rawdata",   "type": "bytes"}
+            ]}'''
 
     @staticmethod
     def preprocess(raw_data):
@@ -60,7 +58,7 @@ class DataHandler(object):
         pass
 
     @abstractmethod
-    def list_metric_ids(self, limit=-1, filters=None):
+    def list_metric_ids(self, limit=-1):
         """ return list of metrics """
         pass
 

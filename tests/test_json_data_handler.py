@@ -79,8 +79,8 @@ class JsonDataHandlerTestCase(SparkTestCase):
         filters['start_ts'] = 1446426784000
         filters['end_ts'] = 1446426784400
         expected_result = [('in_bytes', [(1446426784000, '240')]),  
-                           ('version', [(1446426784000, '5')]),
-                           ('in_pkts', [(1446426784000, '4')])]
+                           ('in_pkts', [(1446426784000, '4')]),
+                           ('version', [(1446426784000, '5')])]
         result = handler.execute_query(filters=filters)
         logging.debug(result)
         self.assertEqual(result, expected_result)

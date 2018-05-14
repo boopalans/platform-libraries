@@ -67,8 +67,8 @@ class JsonDataHandlerTestCase(SparkTestCase):
 
         #test query without filters
         expected_result = [('in_bytes', [(1446426784000, '240'), (1446426785000, '220'), (1446436817000, '181')]), 
-                           ('version', [(1446426784000, '5'), (1446426785000, '5'), (1446436817000, '5')]),
-                           ('in_pkts', [(1446426784000, '4'), (1446426785000, '6'), (1446436817000, '4')])]
+                           ('in_pkts', [(1446426784000, '4'), (1446426785000, '6'), (1446436817000, '4')]),
+                           ('version', [(1446426784000, '5'), (1446426785000, '5'), (1446436817000, '5')])]
         result = handler.execute_query()
         logging.debug(result)
         self.assertEqual(result, expected_result)

@@ -39,7 +39,15 @@ class DataHandler(object):
         self.path = path
         self._rdd = None
         self._hdfs_root_uri = None
-        self.schema = self._load_schema()
+        self.schema = '''
+            schema_dic = {"namespace": "pnda.entity",
+               "type": "record",
+               "name": "event",
+               "fields": [
+                   {"name": "timestamp", "type": "long"},
+                   {"name": "source",    "type": "string"},
+                   {"name": "rawdata",   "type": "bytes"}
+                ]}'''
 
     @staticmethod
     def preprocess(raw_data):
@@ -87,7 +95,7 @@ class DataHandler(object):
                    self.datasource,
                    self.path)
         conf = {
-            "avro.schema.input.key": reduce(lambda x, y: x + y, self.schema),
+            "avro.schema.input.key": self.schema,
             "mapreduce.input.fileinputformat.input.dir.recursive": "true"
         }
         data_rdd = self.spark_context \
@@ -102,18 +110,3 @@ class DataHandler(object):
         preprocess = self.preprocess
         self._rdd = data_rdd.map(lambda x: preprocess(x[0]))
         return self._rdd
-
-    def _load_schema(self):
-        """ return avrc schema
-        Args:
-            - hdfs_root_uri: hdfs root uri
-        """
-        schema_dic = {"namespace": "pnda.entity",
-               "type": "record",
-               "name": "event",
-               "fields": [
-                   {"name": "timestamp", "type": "long"},
-                   {"name": "source",    "type": "string"},
-                   {"name": "rawdata",   "type": "bytes"}
-                ]}
-        return avro.schema.parse(json.dumps(schema_dic))

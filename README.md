@@ -176,13 +176,11 @@ A collection of builtin helper functions
    * **Description**: Preprocessing abstract interface
     * **Args:**
       * raw_data: the input RDD
-      
  * **list_metric_ids**
-   * **Description**: abstract interface that returns list of (<host ip>, [(<metric_id>, total_stats)) pairs aggregated by descending order on per host basis
+   * **Description**: abstract interface that returns list of (<metric_id>, total_stats) pairs aggregated by descending order on per host basis
     * **Args:**
       * limit: the limit of numer of metrics of each host
       * filters: filtering rules
-	
  * **execute_query**
    * **Description**: return time-series data
     * **Args:**

@@ -28,24 +28,20 @@ class DataHandler(object):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         """ Constructor """
         self.spark_context = spark_context
         self.datasource = datasource
+        self.is_topic = isTopic
         self.path = path
         self._rdd = None
         self._hdfs_root_uri = None
-        self.schema = self._load_schema()
 
     @staticmethod
     def preprocess(raw_data):
         """ return raw rdd """
         return raw_data
-
-    @abstractmethod
-    def list_host_ips(self):
-        """ return list of monitored host ips """
-        pass
 
     @abstractmethod
     def list_metric_ids(self, limit=-1, filters=None):
@@ -73,17 +69,16 @@ class DataHandler(object):
             - datasource: data source name
             - path: the relative path to data source directory
         """
-
         if self._rdd:
             return self._rdd
 
-        root = '{}/user/pnda/PNDA_datasets/' \
-               'datasets/source={}/{}' \
-               .format(self.hdfs_root_uri,
-                       self.datasource,
-                       self.path)
+        root = ('{}/user/pnda/PNDA_datasets/datasets/topic={}/{}' \
+            if self.is_topic else \
+            '{}/user/pnda/PNDA_datasets/datasets/source={}/{}') \
+            .format(self.hdfs_root_uri,
+                    self.datasource,
+                    self.path)
         conf = {
-            "avro.schema.input.key": reduce(lambda x, y: x + y, self.schema),
             "mapreduce.input.fileinputformat.input.dir.recursive": "true"
         }
         data_rdd = self.spark_context \
@@ -98,12 +93,3 @@ class DataHandler(object):
         preprocess = self.preprocess
         self._rdd = data_rdd.map(lambda x: preprocess(x[0]))
         return self._rdd
-
-    def _load_schema(self):
-        """ return avrc schema
-        Args:
-            - hdfs_root_uri: hdfs root uri
-        """
-        schema_path = '{}/user/pnda/PNDA_datasets/datasets/' \
-                      '.metadata/schema.avsc'.format(self.hdfs_root_uri)
-        return self.spark_context.textFile(schema_path).collect()

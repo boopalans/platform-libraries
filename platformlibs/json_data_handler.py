@@ -14,6 +14,7 @@ Name:       json_data_handler
 Purpose:    JSON data handler implementation
 """
 import json
+from platformlibs.common_helpers import flatten_dict
 from platformlibs.data_handler import DataHandler
 
 class JsonDataHandler(DataHandler):
@@ -23,7 +24,8 @@ class JsonDataHandler(DataHandler):
     def __init__(self,
                  spark_context,
                  datasource,
-                 path):
+                 path,
+                 isTopic=False):
         '''
         Constructor
         :param sc:
@@ -35,7 +37,8 @@ class JsonDataHandler(DataHandler):
         DataHandler.__init__(self,
                              spark_context,
                              datasource,
-                             path)
+                             path,
+                             isTopic)
 
     @staticmethod
     def preprocess(data_dict):
@@ -44,46 +47,42 @@ class JsonDataHandler(DataHandler):
             data_dict: the raw data rdd
         """
         raw_data_str = data_dict.pop('rawdata').decode('utf-8')
-        data_dict['rawdata'] = json.loads(raw_data_str)
+        data_dict['rawdata'] = flatten_dict(json.loads(raw_data_str))
         return data_dict
-
-    def list_host_ips(self):
-        """ return list of monitored host ips """
-        result = self.rdd.map(lambda x: (str(x['host_ip']), 1)) \
-                         .reduceByKey(lambda x, y: x + y) \
-                         .collect()
-        return sorted(result, key=lambda x: x[1], reverse=True)
 
     def list_metric_ids(self, limit=-1, filters=None):
         """ return list of metric statistics """
 
         #embedded function declaration
-        def func(item):
-            return item
-
         def get_count(item):
             return item[1]
 
         t_rdd = self.rdd
+        m_filter = None
 
         if filters:
-            if filters.has_key('host_ips'):
-                # filter by host ips
-                t_rdd = t_rdd.filter(lambda x: (x['host_ip'] in filters['host_ips']))
+            # extract metric list filter if exists
+            m_filter = filters.pop('metrics', None) 
+            
+            for f in filters:
+                t_rdd = t_rdd.filter(lambda x: x['rawdata'][f] in filters[f])
 
-        t_rdd = t_rdd.map(lambda x: (str(x['host_ip']), x['rawdata'].keys())) \
-             .flatMapValues(func) \
-             .map(lambda x: (x, 1)) \
-             .reduceByKey(lambda x, y: x + y) \
-             .map(lambda x: (x[0][0], (x[0][1], x[1]))) \
-             .groupByKey() \
-             .mapValues(list) \
-             .map(lambda x: (x[0], sorted(x[1], key=get_count)))
+            t_rdd = t_rdd.map(lambda x: {i:x['rawdata'][i] for i in x['rawdata'] if i not in filters})
+        else:
+            t_rdd = t_rdd.map(lambda x: x['rawdata'])
 
+        t_rdd = t_rdd.flatMap(lambda x: x.keys()) \
+                    .map(lambda x: (x, 1)) \
+                    .reduceByKey(lambda x, y: x + y)
+
+        if m_filter:
+            t_rdd = t_rdd.filter(lambda x: x[0] in m_filter)
+           
+        stats = t_rdd.collect()
+        stats = sorted(stats, key=get_count)
         if limit > 0:
-            t_rdd = t_rdd.map(lambda x: (x[0], x[1][0:limit]))
-
-        return t_rdd.collect()
+            stats = stats[0:limit]
+        return stats
 
     def execute_query(self, filters=None):
         '''
@@ -100,32 +99,32 @@ class JsonDataHandler(DataHandler):
 
         t_rdd = self.rdd
 
+        m_filter = None
+        
         if filters:
-            #apply filtering rules
-            if filters.has_key('host_ips'):
-                # filter by host ips
-                t_rdd = t_rdd.filter(lambda x: (x['host_ip'] in filters['host_ips']))
+            m_filter = filters.pop('metrics', None)
+            
             if filters.has_key('start_ts'):
+                start_ts = filters.pop('start_ts')
                 # filter by timestamps
-                t_rdd = t_rdd.filter(lambda x: (int(x['timestamp']) >= filters['start_ts']))
+                t_rdd = t_rdd.filter(lambda x: (int(x['timestamp']) >= start_ts))
             if filters.has_key('end_ts'):
                 #filter by timestamps
-                t_rdd = t_rdd.filter(lambda x: (int(x['timestamp']) <= filters['end_ts']))
-            if filters.has_key('data_sources'):
-                #filter by src
-                t_rdd = t_rdd.filter(lambda x: (x['src'] in filters['data_sources']))
-
-        t_rdd = t_rdd.map(lambda x: ((x['host_ip'], x['timestamp']), x['rawdata'].items())) \
+                end_ts = filters.pop('end_ts')
+                t_rdd = t_rdd.filter(lambda x: (int(x['timestamp']) <= end_ts))
+            for f in filters:
+                t_rdd = t_rdd.filter(lambda x: x['rawdata'][f] in filters[f])
+                
+        t_rdd = t_rdd.map(lambda x: (x['timestamp'], x['rawdata'].items())) \
                       .flatMapValues(func) \
-                      .map(lambda x: x[1]+x[0])
+                      .map(lambda x: (x[1][0], (x[0], x[1][1])))
 
-        if filters and filters.has_key('metrics'):
-            t_rdd = t_rdd.filter(lambda x: x[0] in filters['metrics'])
-
+        if m_filter:
+            t_rdd = t_rdd.filter(lambda x: x[0] in m_filter)
+                
         t_rdd = t_rdd.distinct() \
-                     .map(lambda x: ((x[0], x[2]), (x[3], x[1]))) \
                      .groupByKey() \
                      .mapValues(list) \
-                     .map(lambda x: (x[0], sorted(x[1], key=get_ts)))
+                     .map(lambda x : (x[0], sorted(x[1], key=get_ts)))
 
         return t_rdd.collect()

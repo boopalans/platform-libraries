@@ -61,95 +61,43 @@ t_input = [{u'timestamp': 1439535267000,
                                                   "SecondsSincePacketSent":4294967295},
                                                   "key":{"InterfaceName":"Null0"}}"}
                         ''',
-            u'host_ip': u'192.168.0.9',
-            u'src': u'telemetry'}]
+            u'source': u'telemetry'}]
 
 class XrDataHandlerTestCase(SparkTestCase):
 
-    @mock.patch('platformlibs.xr_data_handler.XrDataHandler._load_schema')
     @mock.patch('platformlibs.xr_data_handler.XrDataHandler.rdd')
-    def test_list_host_ips(self, mock_load_schema, mock_rdd):
-
-        test_rdd = self.spark_context.parallelize(t_input)
-
-        # set up the mock
-        # pylint: disable=protected-access
-        mock_load_schema.return_value = 'Mocked schema'
-        mock_rdd = mock.PropertyMock(return_value=test_rdd)
-        handler = platformlibs.xr_data_handler.XrDataHandler(self.spark_context, "mocked source", "mocked path")
-        type(handler).rdd = mock_rdd
-        result = handler.list_host_ips()
-        logging.debug(result)
-        expected_result = [('192.168.0.9', 1)]
-        self.assertEqual(result, expected_result)
-
-    @mock.patch('platformlibs.xr_data_handler.XrDataHandler._load_schema')
-    @mock.patch('platformlibs.xr_data_handler.XrDataHandler.rdd')
-    def test_list_metric_ids(self, mock_load_schema, mock_rdd):
+    def test_list_metric_ids(self, mock_rdd):
         """ test list_metric_ids """
         t_rdd = self.spark_context.parallelize(t_input)
         preprocess = platformlibs.xr_data_handler.XrDataHandler.preprocess
         test_rdd = t_rdd.map(lambda x: preprocess(x))
         # set up the mock
         # pylint: disable=protected-access
-        mock_load_schema.return_value = 'Mocked schema'
         mock_rdd = mock.PropertyMock(return_value=test_rdd)
         handler = platformlibs.xr_data_handler.XrDataHandler(self.spark_context, "mocked source", "mocked path")
         type(handler).rdd = mock_rdd
         # test list metrics without limits and filters
-        expected_result = [('192.168.0.9', [(u'counters.BytesReceived', 1),
-                                            (u'counters.MulticastPacketsSent', 1),
-                                            (u'counters.SecondsSincePacketSent', 1),
-                                            (u'counters.LastDataTime', 1),
-                                            (u'counters.BroadcastPacketsReceived', 1),
-                                            (u'counters.PacketsReceived', 1),
-                                            (u'counters.InputOverruns', 1),
-                                            (u'counters.AvailabilityFlag', 1),
-                                            (u'counters.Applique', 1),
-                                            (u'counters.FramingErrorsReceived', 1),
-                                            (u'counters.GiantPacketsReceived', 1),
-                                            (u'counters.OutputBuffersSwappedOut', 1),
-                                            (u'counters.InputDrops', 1),
-                                            (u'counters.CRCErrors', 1),
-                                            (u'counters.ParityPacketsReceived', 1),
-                                            (u'counters.InputQueueDrops', 1),
-                                            (u'counters.BroadcastPacketsSent', 1),
-                                            (u'counters.OutputQueueDrops', 1),
-                                            (u'counters.UnknownProtocolPacketsReceived', 1),
-                                            (u'counters.SecondsSinceLastClearCounters', 1),
-                                            (u'counters.Resets', 1),
-                                            (u'counters.OutputErrors', 1),
-                                            (u'counters.RuntPacketsReceived', 1),
-                                            (u'counters.InputErrors', 1),
-                                            (u'counters.SecondsSincePacketReceived', 1),
-                                            (u'counters.ThrottledPacketsReceived', 1),
-                                            (u'counters.OutputDrops', 1),
-                                            (u'counters.OutputUnderruns', 1),
-                                            (u'counters.OutputBufferFailures', 1),
-                                            (u'counters.InputIgnoredPackets', 1),
-                                            (u'counters.BytesSent', 1),
-                                            (u'counters.MulticastPacketsReceived', 1),
-                                            (u'key.InterfaceName', 1),
-                                            (u'counters.PacketsSent', 1),
-                                            (u'counters.CarrierTransitions', 1),
-                                            (u'counters.InputAborts', 1),
-                                            (u'counters.LastDiscontinuityTime', 1)])]
-        result = handler.list_metric_ids()
+        expected_result = [(u'content.counters.InputErrors', 1), (u'content.counters.RuntPacketsReceived', 1)]
+        filters = {'identifier' : 'small_e', 'metrics': ['content.counters.InputErrors', 'content.counters.RuntPacketsReceived']}
+        result = handler.list_metric_ids(filters=filters)
         logging.debug(result)
         self.assertEqual(result, expected_result)
 
         # test list metrics filtered by metric type
-        filters = {'metric_type':'infra'}
+        filters = {'identifier' : 'small_e', 'metrics': ['content.counters.InputErrors', 'content.counters.RuntPacketsReceived'], 'metric_type': 'infra'}
+        logging.debug("==== print out current filters ====")
+        logging.debug(filters)
+        logging.debug("======= end printing ====")
         result = handler.list_metric_ids(filters=filters)
         logging.debug(result)
         self.assertEqual(result, expected_result)
 
-        filters = {'metric_type':'ipsla'}
+        filters['metric_type'] = 'ipsla'
         result = handler.list_metric_ids(filters=filters)
         logging.debug(result)
         self.assertEqual(len(result), 0)
 
-        filters = {'metric_type':'mpls'}
+        filters['metric_type'] = 'mpls'
         result = handler.list_metric_ids(filters=filters)
         logging.debug(result)
         self.assertEqual(len(result), 0)

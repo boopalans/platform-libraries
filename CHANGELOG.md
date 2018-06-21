@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+- PNDA-4503: Update platform-libraries to work with new ingest mechanics
+
+## [0.1.5] 2018-02-10
+### Changed
+- PNDA-3601: Disable emailtext in Jenkins file and replace it with notifier stage and job
+- PNDA-3237: Don't rdd.cache() as this has implications and should be left up to the client
+- PNDA-4216: Handle PEP-440 name normalization in build artefact
 
 ## [0.1.4] 2017-11-24
 ### Added
